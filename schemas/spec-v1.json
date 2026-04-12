@@ -1,0 +1,78 @@
+{
+  "$id": "https://derive.build/schemas/spec-v0.1.json",
+  "title": "Derive Spec Frontmatter v0.1",
+  "description": "YAML frontmatter schema for Derive Human Spec files (Layer 1). Preview.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "module_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "module_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "typescript",
+        "javascript",
+        "python"
+      ]
+    },
+    "extracted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "confidence_summary": {
+      "type": "object",
+      "properties": {
+        "confirmed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inferred": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uncertain": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "confirmed",
+        "inferred",
+        "uncertain"
+      ],
+      "additionalProperties": false
+    },
+    "derive_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_file_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "schema_version",
+    "module_id",
+    "module_path",
+    "language",
+    "extracted_at",
+    "confidence_summary",
+    "derive_version"
+  ],
+  "additionalProperties": false
+}

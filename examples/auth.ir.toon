@@ -1,0 +1,58 @@
+@toon 0.1.0
+# Format: https://derive.build/docs/toon-ir
+# Keys: sig=signature desc=description lang=language type=dep_type alternatives=rejected_alternatives
+module: auth
+path: src/auth
+lang: typescript
+extracted: 2026-04-11T00:00:00Z
+tokens: 87
+
+--- entry_points ---
+
+entry_point login
+  name: login
+  sig: (email: string, password: string) => Promise<boolean>
+  confidence: confirmed
+  desc: Authenticate a user by email and password
+
+entry_point logout
+  name: logout
+  sig: () => void
+  confidence: confirmed
+
+entry_point auth-service
+  name: AuthService
+  sig: class AuthService { login, logout, validateToken }
+  confidence: confirmed
+  desc: User authentication service
+
+--- constraints ---
+
+constraint passwords-must-be-hashed-befor
+  desc: Passwords must be hashed before storage
+  category: security
+  confidence: inferred
+  rationale: |
+    PCI compliance requires bcrypt or equivalent hashing for all stored credentials
+  alternatives:
+    - desc: Store plaintext passwords
+      reason: Violates PCI DSS requirement 8.2.1
+    - desc: Use MD5 hashing
+      reason: Cryptographically broken since 2004
+
+--- dependencies ---
+
+dependency bcrypt
+  module: bcrypt
+  type: external
+  confidence: confirmed
+
+dependency jsonwebtoken
+  module: jsonwebtoken
+  type: external
+  confidence: confirmed
+
+dependency models-user
+  module: ./models/user
+  type: internal
+  confidence: confirmed
