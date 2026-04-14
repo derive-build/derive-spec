@@ -3,12 +3,12 @@ schema_version: "0.1.0"
 module_id: auth
 module_path: src/auth
 language: typescript
-extracted_at: "2026-04-11T00:00:00Z"
+extracted_at: "2026-04-14T00:00:00Z"
 confidence_summary:
   confirmed: 3
-  inferred: 1
+  inferred: 2
   uncertain: 0
-derive_version: "0.1.0"
+derive_version: "0.2.0"
 source_file_count: 4
 ---
 
@@ -29,6 +29,23 @@ source_file_count: 4
 - **Signature:** `class AuthService { login, logout, validateToken }`
 - **Confidence:** confirmed
 - **Description:** User authentication service
+
+## Business Flows
+
+### User Login
+- **Entry Point:** `login`
+- **Path:** `login` → `validateCredentials` → `hashCompare` → `generateToken`
+- **Confidence:** inferred
+- **Description:** Validates email/password against stored credentials, compares bcrypt hash, issues JWT token on success.
+- **Data Stores:**
+  - READ `users` via `validateCredentials` (confirmed)
+  - CALL `jsonwebtoken.sign` via `generateToken` (confirmed)
+- **Constraints:**
+  - `passwords-must-be-hashed` (security)
+- **Logic Summary:**
+  Email looked up in users table. If found, bcrypt.compare runs against stored hash. On match,
+  JWT signed with user ID and role claims, 24h expiry. On mismatch, generic "invalid credentials"
+  error returned (no email/password distinction for security).
 
 ## Constraints
 

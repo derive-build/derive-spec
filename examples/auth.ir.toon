@@ -4,8 +4,8 @@
 module: auth
 path: src/auth
 lang: typescript
-extracted: 2026-04-11T00:00:00Z
-tokens: 87
+extracted: 2026-04-14T00:00:00Z
+tokens: 142
 
 --- entry_points ---
 
@@ -25,6 +25,32 @@ entry_point auth-service
   sig: class AuthService { login, logout, validateToken }
   confidence: confirmed
   desc: User authentication service
+
+--- business_flows ---
+
+business_flow user-login
+  name: User Login
+  entry: login
+  exits: generateToken
+  path: login, validateCredentials, hashCompare, generateToken
+  confidence: inferred
+  desc: |
+    Validates email/password against stored credentials, compares bcrypt hash,
+    issues JWT token on success.
+  stores:
+    - op: read
+      target: users
+      func: validateCredentials
+      confidence: confirmed
+    - op: call
+      target: jsonwebtoken.sign
+      func: generateToken
+      confidence: confirmed
+  constraints: passwords-must-be-hashed-befor
+  logic: |
+    Email looked up in users table. If found, bcrypt.compare runs against stored
+    hash. On match, JWT signed with user ID and role claims, 24h expiry. On
+    mismatch, generic invalid credentials error (no email/password distinction).
 
 --- constraints ---
 

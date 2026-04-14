@@ -29,7 +29,7 @@ Standard Markdown with YAML frontmatter (parseable by gray-matter, Jekyll, Hugo,
 | `schema_version` | string (semver) | yes | Format version, currently `"0.1.0"` |
 | `module_id` | string | yes | Unique module identifier (e.g., `"auth"`) |
 | `module_path` | string | yes | Source path relative to repo root (e.g., `"src/auth"`) |
-| `language` | enum | yes | `"typescript"` \| `"javascript"` \| `"python"` |
+| `language` | string | yes | Language identifier (e.g., `"typescript"`, `"javascript"`, `"python"`, `"go"`, `"java"`, `"rust"`) |
 | `extracted_at` | string (ISO 8601) | yes | Extraction timestamp with timezone offset |
 | `last_reviewed` | string (ISO 8601) | no | Last human review timestamp |
 | `confidence_summary` | object | yes | `{ confirmed, inferred, uncertain }` integer counts |
@@ -53,12 +53,48 @@ Standard Markdown with YAML frontmatter (parseable by gray-matter, Jekyll, Hugo,
 - **Rejected Alternatives:**
   - {alternative} — *{reason rejected}*
 
+## Business Flows
+### {flow name}
+- **Entry Point:** `{entry function}`
+- **Path:** `{func1}` → `{func2}` → `{func3}`
+- **Confidence:** {confirmed|inferred|uncertain}
+- **Description:** {what the flow does end-to-end}
+- **Data Stores:**
+  - {READ|WRITE|DELETE|CALL} `{target}` via `{function}` ({confidence})
+- **Constraints:**
+  - `{constraint_id}` ({category})
+- **Logic Summary:** {natural language summary of the business logic in the flow}
+
 ## Dependencies
 ### External
 - `{module}` ({confidence})
 ### Internal
 - `{module}` ({confidence})
 ```
+
+### Business Flow Model
+
+Business flows represent end-to-end execution paths through a module — from an entry point through intermediate functions to data store operations or external calls.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `entry_point` | string | yes | Entry function that starts the flow |
+| `path` | string[] | yes | Ordered list of functions in the execution path |
+| `exit_points` | string[] | yes | Terminal functions (return points, data store writes) |
+| `description` | string | yes | Natural language description of the flow |
+| `data_stores` | DataStoreOperation[] | no | Database writes, API calls, file operations within the flow |
+| `constraints` | string[] | no | IDs of constraints that apply within this flow |
+| `logic_summary` | string | no | Natural language summary of the business logic in the flow |
+| `confidence` | enum | yes | `confirmed` \| `inferred` \| `uncertain` |
+
+**DataStoreOperation:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `operation` | enum | `read` \| `write` \| `delete` \| `call` |
+| `target` | string | Table name, API endpoint, or file path |
+| `function_id` | string | Function where this operation occurs |
+| `confidence` | enum | `confirmed` \| `inferred` \| `uncertain` |
 
 ### Confidence Model
 
@@ -102,6 +138,12 @@ TOON uses abbreviated keys for compactness:
 | `extracted` | `extracted_at` | Extraction timestamp |
 | `path` | `module_path` | Source path |
 | `module` | `module_id` | Module identifier |
+| `logic` | `logic_summary` | Natural language summary of flow logic |
+| `entry` | `entry_point` | Entry function for a business flow |
+| `exits` | `exit_points` | Terminal functions of a business flow |
+| `stores` | `data_stores` | Data store operations |
+| `op` | `operation` | Data store operation type |
+| `func` | `function_id` | Function where operation occurs |
 
 ### TOON Structure
 
@@ -122,6 +164,25 @@ entry_point {id}
   sig: {signature}
   confidence: {confirmed|inferred|uncertain}
   desc: {description}
+
+--- business_flows ---
+
+business_flow {id}
+  name: {flow name}
+  entry: {entry function id}
+  exits: {exit1}, {exit2}
+  path: {func1}, {func2}, {func3}
+  confidence: {confirmed|inferred|uncertain}
+  desc: |
+    {multiline flow description}
+  stores:
+    - op: {read|write|delete|call}
+      target: {table, endpoint, or file}
+      func: {function id}
+      confidence: {confirmed|inferred|uncertain}
+  constraints: {constraint_id1}, {constraint_id2}
+  logic: |
+    {natural language summary of the business logic}
 
 --- constraints ---
 

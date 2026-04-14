@@ -19,11 +19,7 @@
     },
     "language": {
       "type": "string",
-      "enum": [
-        "typescript",
-        "javascript",
-        "python"
-      ]
+      "minLength": 1
     },
     "extracted_at": {
       "type": "string",

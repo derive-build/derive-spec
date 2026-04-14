@@ -10,12 +10,12 @@ For brownfield systems especially, code is a liability — it's the thing you're
 
 ## What This Format Captures
 
-The Derive Spec Format defines what code analysis tools miss:
-
+- **Business flows** — end-to-end execution paths through a module (e.g., validate card → check fraud → charge → update order), with the data stores they touch
 - **Entry points** — the public API surface, with type signatures and confidence levels
 - **Constraints** — security rules, API contracts, data schema rules, behavioral guarantees, compliance requirements
 - **Rationale** — *why* each constraint exists, not just that it does
 - **Rejected alternatives** — what was considered and discarded, and the reason
+- **Dependencies** — internal and external module dependencies
 - **Confidence tiers** — how much to trust each element (`confirmed` / `inferred` / `uncertain`)
 
 ## Two-Layer Architecture
@@ -28,12 +28,23 @@ schema_version: "0.1.0"
 module_id: auth
 module_path: src/auth
 language: typescript
-extracted_at: "2026-04-11T00:00:00Z"
+extracted_at: "2026-04-14T00:00:00Z"
 confidence_summary:
   confirmed: 3
-  inferred: 1
+  inferred: 2
   uncertain: 0
 ---
+
+## Business Flows
+
+### User Login
+- **Entry Point:** `login`
+- **Path:** `login` → `validateCredentials` → `hashCompare` → `generateToken`
+- **Confidence:** inferred
+- **Description:** Validates email/password, compares bcrypt hash, issues JWT on success.
+- **Data Stores:**
+  - READ `users` via `validateCredentials` (confirmed)
+  - CALL `jsonwebtoken.sign` via `generateToken` (confirmed)
 
 ## Constraints
 
@@ -43,7 +54,6 @@ confidence_summary:
 - **Rationale:** PCI compliance requires bcrypt or equivalent
 - **Rejected Alternatives:**
   - Store plaintext passwords — *Violates PCI DSS requirement 8.2.1*
-  - Use MD5 hashing — *Cryptographically broken since 2004*
 ```
 
 **Layer 2 (Agent IR)** — TOON (Token-Oriented Object Notation). Compiled automatically from Layer 1. Optimized for LLM context windows — 30-60% fewer tokens than JSON. Served to AI agents via MCP.
@@ -54,6 +64,22 @@ module: auth
 path: src/auth
 lang: typescript
 
+--- business_flows ---
+
+business_flow user-login
+  name: User Login
+  entry: login
+  exits: generateToken
+  path: login, validateCredentials, hashCompare, generateToken
+  confidence: inferred
+  desc: |
+    Validates email/password, compares bcrypt hash, issues JWT on success.
+  stores:
+    - op: read
+      target: users
+      func: validateCredentials
+      confidence: confirmed
+
 --- constraints ---
 
 constraint passwords-must-be-hashed-befor
@@ -62,9 +88,6 @@ constraint passwords-must-be-hashed-befor
   confidence: inferred
   rationale: |
     PCI compliance requires bcrypt or equivalent
-  alternatives:
-    - desc: Store plaintext passwords
-      reason: Violates PCI DSS requirement 8.2.1
 ```
 
 ## Quick Start
